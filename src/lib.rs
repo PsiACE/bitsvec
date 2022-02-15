@@ -56,10 +56,6 @@
 //! ## Performance
 //!
 //! run `cargo bench` to see the benchmarks on your device.
-//! Benchmarks in author's environment show that this library has the advantage at `u16x8`
-//! among the bitvector libraries currently implemented based on SIMD.
-//! In addition, any SIMD bitvector implementation is inferior to [bit-vec](https://docs.rs/bit-vec/) in `creation`,
-//! while this library performs relatively well overall.
 
 #![feature(portable_simd)]
 #![no_std]
@@ -96,7 +92,7 @@ pub type BitVec = BitVecSimd<[u64x4; 4], 4>;
 pub struct BitVecSimd<A, const L: usize>
 where
     A: Array + Index<usize>,
-    A::Item: BitContainer<L>,
+    A::Item: BitBlock<L>,
 {
     // internal representation of bitvec
     // TODO: try `Vec`, may be better than smallvec
@@ -147,7 +143,7 @@ macro_rules! impl_operation {
 impl<A, const L: usize> BitVecSimd<A, L>
 where
     A: Array + Index<usize>,
-    A::Item: BitContainer<L>,
+    A::Item: BitBlock<L>,
 {
     // convert total bit to length
     // input: Number of bits
@@ -173,9 +169,9 @@ where
     #[inline]
     fn set_bit(
         flag: bool,
-        bytes: <A::Item as BitContainer<L>>::Element,
+        bytes: <A::Item as BitBlock<L>>::Item,
         offset: u32,
-    ) -> <A::Item as BitContainer<L>>::Element {
+    ) -> <A::Item as BitBlock<L>>::Item {
         match flag {
             true => bytes | A::Item::ONE_ELEMENT.wrapping_shl(offset),
             false => bytes & !A::Item::ONE_ELEMENT.wrapping_shl(offset),
@@ -293,7 +289,7 @@ where
     /// assert_eq!(bitvec.get(2), Some(false));
     /// assert_eq!(bitvec.get(3), None);
     /// ```
-    pub fn from_slice_copy(slice: &[<A::Item as BitContainer<L>>::Element], nbits: usize) -> Self {
+    pub fn from_slice_copy(slice: &[<A::Item as BitBlock<L>>::Item], nbits: usize) -> Self {
         let len = (nbits + A::Item::ELEMENT_BIT_WIDTH - 1) / A::Item::ELEMENT_BIT_WIDTH;
         assert!(len <= slice.len());
 
@@ -334,7 +330,7 @@ where
     ///   space. That is, the infinite-precision sum, **in bytes** must fit in a usize.
     ///
     pub unsafe fn from_raw_copy(
-        ptr: *const <A::Item as BitContainer<L>>::Element,
+        ptr: *const <A::Item as BitBlock<L>>::Item,
         buffer_len: usize,
         nbits: usize,
     ) -> Self {
@@ -409,11 +405,7 @@ where
         self.storage.spilled()
     }
 
-    fn clear_arr_high_bits(
-        arr: &mut [<A::Item as BitContainer<L>>::Element],
-        bytes: usize,
-        bits: usize,
-    ) {
+    fn clear_arr_high_bits(arr: &mut [<A::Item as BitBlock<L>>::Item], bytes: usize, bits: usize) {
         let mut end_bytes = bytes;
         if bits > 0 {
             arr[end_bytes] =
@@ -426,7 +418,7 @@ where
     }
 
     fn fill_arr_high_bits(
-        arr: &mut [<A::Item as BitContainer<L>>::Element],
+        arr: &mut [<A::Item as BitBlock<L>>::Item],
         bytes: usize,
         bits: usize,
         bytes_max: usize,
@@ -947,7 +939,7 @@ where
 impl<A, I: Iterator<Item = bool>, const L: usize> From<I> for BitVecSimd<A, L>
 where
     A: Array + Index<usize>,
-    A::Item: BitContainer<L>,
+    A::Item: BitBlock<L>,
 {
     fn from(i: I) -> Self {
         Self::from_bool_iterator(i)
@@ -964,7 +956,7 @@ macro_rules! impl_trait {
         impl<A, const L: usize> $( $name )+ for $( $name1 )+
         where
             A: Array + Index<usize>,
-            A::Item: BitContainer<L>,
+            A::Item: BitBlock<L>,
         { $( $body )* }
     };
 }
@@ -1123,8 +1115,8 @@ impl_trait! {(BitXorAssign), (BitVecSimd<A, L>), { impl_bit_assign_fn!((Self), b
 impl_trait! {(BitXorAssign< &BitVecSimd<A, L> >), (BitVecSimd<A, L>), { impl_bit_assign_fn!((&BitVecSimd<A, L>), bitxor_assign, xor_inplace); } }
 impl_trait! {(BitXorAssign< &mut BitVecSimd<A, L> >), (BitVecSimd<A, L>), { impl_bit_assign_fn!((&mut BitVecSimd<A, L>), bitxor_assign, xor_inplace); } }
 
-// BitContainerItem is the element of a SIMD type BitContainer
-pub trait BitContainerItem:
+// BitBlockItem is the element of a SIMD type BitBlock
+pub trait BitBlockItem:
     Not<Output = Self>
     + BitAnd<Output = Self>
     + BitOr<Output = Self>
@@ -1154,9 +1146,9 @@ pub trait BitContainerItem:
     fn clear_low_bits(self, rhs: u32) -> Self;
 }
 
-macro_rules! impl_bitcontaineritem {
+macro_rules! impl_bitblock_item {
     ($type: ty, $zero: expr, $one: expr, $max: expr) => {
-        impl BitContainerItem for $type {
+        impl BitBlockItem for $type {
             const BIT_WIDTH: usize = Self::BITS as usize;
             const ZERO: Self = $zero;
             const ONE: Self = $one;
@@ -1195,14 +1187,14 @@ macro_rules! impl_bitcontaineritem {
     };
 }
 
-impl_bitcontaineritem!(u8, 0u8, 1u8, 0xFFu8);
-impl_bitcontaineritem!(u16, 0u16, 1u16, 0xFFFFu16);
-impl_bitcontaineritem!(u32, 0u32, 1u32, 0xFFFFFFFFu32);
-impl_bitcontaineritem!(u64, 0u64, 1u64, 0xFFFFFFFFFFFFFFFFu64);
+impl_bitblock_item!(u8, 0u8, 1u8, 0xFFu8);
+impl_bitblock_item!(u16, 0u16, 1u16, 0xFFFFu16);
+impl_bitblock_item!(u32, 0u32, 1u32, 0xFFFFFFFFu32);
+impl_bitblock_item!(u64, 0u64, 1u64, 0xFFFFFFFFFFFFFFFFu64);
 
-// BitContainer is the basic building block for internal storage
+// BitBlock is the basic building block for internal storage
 // BitVec is expected to be aligned properly
-pub trait BitContainer<const L: usize>:
+pub trait BitBlock<const L: usize>:
     Not<Output = Self>
     + BitAnd<Output = Self>
     + BitOr<Output = Self>
@@ -1214,38 +1206,38 @@ pub trait BitContainer<const L: usize>:
     + Copy
     + Clone
     + Debug
-    + From<[Self::Element; L]>
+    + From<[Self::Item; L]>
 {
-    type Element: BitContainerItem;
+    type Item: BitBlockItem;
     const BIT_WIDTH: usize;
     const ELEMENT_BIT_WIDTH: usize;
     const LANES: usize;
-    const ZERO_ELEMENT: Self::Element;
-    const ONE_ELEMENT: Self::Element;
-    const MAX_ELEMENT: Self::Element;
+    const ZERO_ELEMENT: Self::Item;
+    const ONE_ELEMENT: Self::Item;
+    const MAX_ELEMENT: Self::Item;
     const ZERO: Self;
     const MAX: Self;
-    fn to_array(self) -> [Self::Element; L];
+    fn to_array(self) -> [Self::Item; L];
     fn and_inplace(&mut self, rhs: &Self);
     fn or_inplace(&mut self, rhs: &Self);
     fn xor_inplace(&mut self, rhs: &Self);
 }
 
-macro_rules! impl_bitcontainer {
-    ($type: ty, $elem_type: ty, $lanes: expr) => {
-        impl BitContainer<$lanes> for $type {
-            type Element = $elem_type;
-            const BIT_WIDTH: usize = ($lanes * <$elem_type>::BIT_WIDTH) as usize;
-            const ELEMENT_BIT_WIDTH: usize = <$elem_type>::BIT_WIDTH;
+macro_rules! impl_bitblock {
+    ($type: ty, $item_type: ty, $lanes: expr) => {
+        impl BitBlock<$lanes> for $type {
+            type Item = $item_type;
+            const BIT_WIDTH: usize = ($lanes * <$item_type>::BIT_WIDTH) as usize;
+            const ELEMENT_BIT_WIDTH: usize = <$item_type>::BIT_WIDTH;
             const LANES: usize = $lanes;
-            const ZERO_ELEMENT: $elem_type = <$elem_type>::ZERO;
-            const ONE_ELEMENT: $elem_type = <$elem_type>::ONE;
-            const MAX_ELEMENT: $elem_type = <$elem_type>::MAX;
+            const ZERO_ELEMENT: $item_type = <$item_type>::ZERO;
+            const ONE_ELEMENT: $item_type = <$item_type>::ONE;
+            const MAX_ELEMENT: $item_type = <$item_type>::MAX;
             const ZERO: Self = <$type>::splat(0);
-            const MAX: Self = <$type>::splat(<$elem_type>::MAX);
+            const MAX: Self = <$type>::splat(<$item_type>::MAX);
 
             #[inline]
-            fn to_array(self) -> [$elem_type; $lanes] {
+            fn to_array(self) -> [$item_type; $lanes] {
                 <$type>::to_array(self)
             }
 
@@ -1267,9 +1259,10 @@ macro_rules! impl_bitcontainer {
     };
 }
 
-impl_bitcontainer!(u8x16, u8, 16);
-impl_bitcontainer!(u16x8, u16, 8);
-impl_bitcontainer!(u32x4, u32, 4);
-impl_bitcontainer!(u32x8, u32, 8);
-impl_bitcontainer!(u64x2, u64, 2);
-impl_bitcontainer!(u64x4, u64, 4);
+impl_bitblock!(u8x16, u8, 16);
+impl_bitblock!(u16x8, u16, 8);
+impl_bitblock!(u32x4, u32, 4);
+impl_bitblock!(u32x8, u32, 8);
+impl_bitblock!(u64x2, u64, 2);
+impl_bitblock!(u64x4, u64, 4);
+impl_bitblock!(u64x8, u64, 8);
