@@ -1,8 +1,25 @@
-## bitsvec
+<div align="center">
+  <h1><code>bitsvec</code></h1>
 
-A bit vector with [the Rust standard library's portable SIMD API](https://github.com/rust-lang/portable-simd).
+  <p>
+    <strong>A bit vector with <a href="https://github.com/rust-lang/portable-simd">the Rust standard library's portable SIMD API</a></strong>
+  </p>
+
+  <p>
+    <a href="https://crates.io/crates/bitsvec"><img src="https://img.shields.io/crates/v/bitsvec.svg" alt="crates.io page" /></a>
+    <a href="https://docs.rs/bitsvec"><img src="https://docs.rs/bitsvec/badge.svg" alt="docs.rs docs" /></a>
+  </p>
+</div>
 
 ## Usage
+
+Add `bitsvec` to `Cargo.toml`:
+
+```toml
+bitsvec = "x.y.z"
+```
+
+Write some code like this:
 
 ```rust
 let mut bitvec = BitVec::ones(1000); // create a bitvec contains 0 ..= 999
@@ -27,8 +44,6 @@ Compared on AMD Ryzen 9 5900hs, aginst:
 * [bitvec 1.0.0](https://docs.rs/bitvec/1.0.0/bitvec/index.html)
 * [bitvec_simd  0.15.0](https://docs.rs/bitvec_simd/0.15.0/bitvec_simd/index.html)
 * [bitvector_simd 0.2.2](https://docs.rs/bitvector_simd/0.2.2/bitvector_simd/index.html)
-
-<summary><strong>:eyes: See all benchmarks</strong></summary>
 
 <details open>
 
@@ -160,3 +175,12 @@ bitvec 1.0 resize true  time:   [100.50 us 100.63 us 100.75 us]
 ## Credits
 
 Most code of this crate is from (https://github.com/GCCFeli/bitvec_simd). On top of that, some changes were made.
+
+## License
+
+This library is licensed under either of:
+
+* MIT license [LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT
+* Apache License 2.0 [LICENSE-APACHE](LICENSE-APACHE) or https://opensource.org/licenses/Apache-2.0
+
+at your option.
