@@ -85,8 +85,7 @@ bitsvec(this crate) with creation
 Found 10 outliers among 100 measurements (10.00%)
   9 (9.00%) high mild
   1 (1.00%) high severe
-
-Benchmarking bitsvec_u16x8(this crate) with creation: Collecting 100 samples in estimated 5.0053 s (4.5M iteration                                                                                                                  bitsvec_u16x8(this crate) with creation
+                                                                                                              bitsvec_u16x8(this crate) with creation
                         time:   [1.1006 us 1.1031 us 1.1059 us]
 Found 11 outliers among 100 measurements (11.00%)
   8 (8.00%) high mild
@@ -97,8 +96,7 @@ bitvec_simd 0.15.0 with creation
 Found 12 outliers among 100 measurements (12.00%)
   10 (10.00%) high mild
   2 (2.00%) high severe
-
-Benchmarking bitsvec_simd 0.15.0 u16x8 with creation: Collecting 100 samples in estimated 5.0009 s (4.5M iteration                                                                                                                  bitvec_simd 0.15.0 u16x8 with creation
+                                                                                                              bitvec_simd 0.15.0 u16x8 with creation
                         time:   [1.1158 us 1.1185 us 1.1215 us]
 Found 8 outliers among 100 measurements (8.00%)
   6 (6.00%) low mild
@@ -123,8 +121,7 @@ Found 20 outliers among 100 measurements (20.00%)
 
 bitsvec(this crate) resize false
                         time:   [676.30 ns 677.13 ns 677.93 ns]
-
-Benchmarking bitsvec_u16x8(this crate) resize false: Collecting 100 samples in estimated 5.0010 s (8.0M iterations                                                                                                                  bitsvec_u16x8(this crate) resize false
+                                                                                                              bitsvec_u16x8(this crate) resize false
                         time:   [618.70 ns 619.73 ns 620.98 ns]
 Found 2 outliers among 100 measurements (2.00%)
   1 (1.00%) high mild
