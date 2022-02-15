@@ -1,6 +1,6 @@
 [package]
 name = "bitsvec"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Chojan Shang <psiace@outlook.com>"]
 edition = "2021"
 license = "MIT / Apache-2.0"
