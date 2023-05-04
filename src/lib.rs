@@ -160,8 +160,8 @@ where
     #[inline]
     fn bit_to_len(nbits: usize) -> (usize, usize, usize) {
         (
-            nbits / (A::Item::BIT_WIDTH as usize),
-            (nbits % (A::Item::BIT_WIDTH as usize)) / A::Item::ELEMENT_BIT_WIDTH,
+            nbits / (A::Item::BIT_WIDTH),
+            (nbits % A::Item::BIT_WIDTH) / A::Item::ELEMENT_BIT_WIDTH,
             nbits % A::Item::ELEMENT_BIT_WIDTH,
         )
     }
@@ -872,7 +872,7 @@ where
             if extra_leading_zeros > 0 {
                 extra_leading_zeros = A::Item::BIT_WIDTH - extra_leading_zeros
             }
-            return raw_leading_zeros as usize - extra_leading_zeros;
+            return raw_leading_zeros - extra_leading_zeros;
         }
 
         self.nbits
@@ -1233,8 +1233,8 @@ macro_rules! impl_bitblock {
             const ZERO_ELEMENT: $item_type = <$item_type>::ZERO;
             const ONE_ELEMENT: $item_type = <$item_type>::ONE;
             const MAX_ELEMENT: $item_type = <$item_type>::MAX;
-            const ZERO: Self = <$type>::splat(0);
-            const MAX: Self = <$type>::splat(<$item_type>::MAX);
+            const ZERO: Self = <$type>::from_array([0; Self::LANES]);
+            const MAX: Self = <$type>::from_array([<$item_type>::MAX; Self::LANES]);
 
             #[inline]
             fn to_array(self) -> [$item_type; $lanes] {
